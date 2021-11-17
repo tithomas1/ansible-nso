@@ -186,6 +186,53 @@ class JsonRpc(object):
         }
         self._write_call(payload)
 
+    def get_rollbacks(self):
+        payload = {
+            'method': 'get_rollbacks'
+        }
+        resp, resp_json = self._write_call(payload)
+        return resp_json['result']
+
+    def get_rollback(self, nr):
+        # nr is 0-based, counting backwards from most recent commit
+        payload = {
+            'method': 'get_rollback',
+            'params': {
+                'nr': nr
+            }
+        }
+        resp, resp_json = self._write_call(payload)
+        return resp_json['result']
+
+    def install_rollback(self, nr):
+        # nr is 0-based, counting backwards from most recent commit
+        payload = {
+            'method': 'install_rollback',
+            'params': {
+                'nr': nr
+            }
+        }
+        resp, resp_json = self._write_call(payload)
+        return resp_json['result']
+
+    def load_rollback(self, th, nr, path=None, selective=False):
+        # nr is 0-based, counting backwards from most recent commit
+        # Supplying "path" will restrict the rollback to a subtree
+        # "selective" indicates whether to apply all rollbacks 0 - nr (False) or just nr (True)
+        params = {
+            'th': th,
+            'nr': nr,
+            'selective': selective
+        }
+        if path is not None:
+            params.update({"path": path})
+        payload = {
+            'method': 'load_rollback',
+            'params': params
+        }
+        resp, resp_json = self._write_call(payload)
+        return resp_json['result']
+
     def set_value(self, th, path, value):
         payload = {
             'method': 'set_value',

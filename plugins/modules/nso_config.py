@@ -191,12 +191,13 @@ class NsoConfig(object):
         (3, 4, 12)
     ]
 
-    def __init__(self, check_mode, client, data, commit_flags, load, load_path, load_format):
+    def __init__(self, check_mode, client, data, commit_flags, load, load_path, load_format, load_mode):
         self._check_mode = check_mode
         self._client = client
         self._data = data
         self._commit_flags = commit_flags
-        self._load, self._load_path, self._load_format = load, load_path, load_format
+        self._load = load
+        self._load_path, self._load_format, self._load_mode = load_path, load_format, load_mode
 
         self._changes = []
         self._diffs = []
@@ -231,7 +232,7 @@ class NsoConfig(object):
                 elif value.state == State.ABSENT:
                     self._client.delete(th, value.path)
         else:
-            self._client.load(th, self._load_path, values, format=self._load_format, mode=None)
+            self._client.load(th, self._load_path, values, format=self._load_format, mode=self._load_mode)
 
         changes = self._client.get_trans_changes(th)
         for change in changes:
@@ -314,7 +315,8 @@ def main():
         commit_flags=dict(required=False, type='list', elements='str'),
         load=dict(required=False, type='bool', default=False),
         load_path=dict(required=False, type='str', default='/'),
-        load_format=dict(required=False, type='str', choices=['json', 'xml'], default='json')
+        load_format=dict(required=False, type='str', choices=['json', 'xml'], default='json'),
+        load_mode=dict(required=False, type='str', choices=['create', 'merge', 'replace'], default='merge')
     )
 
     argument_spec.update(nso_argument_spec)
@@ -326,7 +328,7 @@ def main():
     p = module.params
     client = connect(p)
     nso_config = NsoConfig(module.check_mode, client, p['data'], p['commit_flags'],
-                           p['load'], p['load_path'], p['load_format'])
+                           p['load'], p['load_path'], p['load_format'], p['load_mode'])
     try:
         verify_version(client, NsoConfig.REQUIRED_VERSIONS)
 
